@@ -9,6 +9,7 @@ from unittest.mock import patch, mock_open
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from leet import load_config, main
+from cli.utils.config_manager import ConfigManager
 
 
 class TestLoadConfig:
@@ -48,13 +49,13 @@ class TestMainFunction:
     
     def test_main_recognizes_add_command(self):
         with patch.object(sys, 'argv', ['leet', 'add']):
-            with patch('add.main') as mock_add_main:
+            with patch('cli.commands.add_problem.main') as mock_add_main:
                 main()
                 mock_add_main.assert_called_once()
     
     def test_main_recognizes_add_sol_command(self):
         with patch.object(sys, 'argv', ['leet', 'add-sol']):
-            with patch('add_sol.main') as mock_add_sol_main:
+            with patch('cli.commands.add_solution.main') as mock_add_sol_main:
                 main()
                 mock_add_sol_main.assert_called_once()
 
@@ -95,38 +96,51 @@ class TestCodeQuality:
         except ImportError as e:
             pytest.fail(f"Failed to import leet module: {e}")
     
-    def test_add_module_imports_successfully(self):
+    def test_add_problem_module_imports_successfully(self):
         try:
-            import add
-            assert hasattr(add, 'main')
+            from cli.commands import add_problem
+            assert hasattr(add_problem, 'main')
         except ImportError as e:
-            pytest.fail(f"Failed to import add module: {e}")
+            pytest.fail(f"Failed to import add_problem module: {e}")
     
-    def test_add_sol_module_imports_successfully(self):
+    def test_add_solution_module_imports_successfully(self):
         try:
-            import add_sol
-            assert hasattr(add_sol, 'main')
-            assert hasattr(add_sol, 'choose_file')
-            assert hasattr(add_sol, 'count_solutions')
+            from cli.commands import add_solution
+            assert hasattr(add_solution, 'main')
         except ImportError as e:
-            pytest.fail(f"Failed to import add_sol module: {e}")
+            pytest.fail(f"Failed to import add_solution module: {e}")
+    
+    def test_config_manager_imports_successfully(self):
+        try:
+            from cli.utils.config_manager import ConfigManager
+            config_manager = ConfigManager()
+            assert hasattr(config_manager, 'get_data_structures')
+            assert hasattr(config_manager, 'add_data_structure')
+        except ImportError as e:
+            pytest.fail(f"Failed to import ConfigManager: {e}")
 
 
 class TestAddFunctionality:
     
-    def test_add_sol_count_solutions_empty_content(self):
-        from add_sol import count_solutions
+    def test_file_utils_count_solutions_empty_content(self):
+        from cli.utils.file_utils import count_solutions
         result = count_solutions("")
         assert result == 0
     
-    def test_add_sol_count_solutions_single(self):
-        from add_sol import count_solutions
+    def test_file_utils_count_solutions_single(self):
+        from cli.utils.file_utils import count_solutions
         content = "Solution 1\nCode here"
         result = count_solutions(content)
         assert result == 1
     
-    def test_add_sol_count_solutions_multiple(self):
-        from add_sol import count_solutions
+    def test_file_utils_count_solutions_multiple(self):
+        from cli.utils.file_utils import count_solutions
         content = "Solution 1\nCode\nSolution 2\nMore code"
         result = count_solutions(content)
         assert result == 2
+    
+    def test_config_manager_get_data_structures(self):
+        config_manager = ConfigManager()
+        structures = config_manager.get_data_structures()
+        assert isinstance(structures, dict)
+        assert len(structures) > 0
