@@ -6,7 +6,6 @@
     "linked_list": "linked_list",
     "stack": "stack",
     "graph": "graph",
-    "queue": "queue",
-    "test data": "test data"
+    "queue": "queue"
   }
 }

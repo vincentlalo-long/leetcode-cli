@@ -1,28 +1,34 @@
 import os
-import questionary
-from rich import print
 from cli.utils.config_manager import ConfigManager
+from cli.utils.ui import (
+    print_command_banner, print_success, print_error, print_warning,
+    print_info, print_section, print_list_item,
+    styled_text_input, styled_select, styled_confirm,
+    separator, console
+)
 
 def add_new_structure(config_manager: ConfigManager) -> bool:
     """Add a new data structure to the configuration"""
     
-    name = questionary.text(
-        "Enter data structure name (e.g., 'tree', 'hash_table'):"
-    ).ask()
+    name = styled_text_input("Data structure name (e.g., tree)")
     
     if not name:
-        print("[red]Data structure name cannot be empty![/red]")
+        print_error("Data structure name cannot be empty!")
         return False
     
-    folder = questionary.text(
-        f"Enter folder name (default: '{name}'):"
-    ).ask() or name
+    folder = styled_text_input(
+        f"Folder name (press Enter for '{name}')",
+        default=name
+    ) or name
     
     if config_manager.add_data_structure(name, folder):
-        print(f"\n[green]✔ Added data structure: {name} -> {folder}[/green]\n")
+        separator()
+        console.print()
+        print_success(f"Added data structure: {name} → {folder}")
+        console.print()
         return True
     else:
-        print(f"[red]Data structure '{name}' already exists![/red]")
+        print_error(f"Data structure '{name}' already exists!")
         return False
 
 def list_structures(config_manager: ConfigManager):
@@ -30,52 +36,63 @@ def list_structures(config_manager: ConfigManager):
     structures = config_manager.get_data_structures()
     
     if not structures:
-        print("[yellow]No data structures found![/yellow]")
+        print_warning("No data structures found!")
         return
     
-    print("\n[cyan]Available Data Structures:[/cyan]")
+    print_section("Available Data Structures")
     for name, folder in structures.items():
-        print(f"  • {name} -> {folder}")
-    print()
+        print_list_item(name, folder)
+    console.print()
 
 def remove_structure(config_manager: ConfigManager):
     """Remove a data structure"""
     structures = config_manager.get_data_structures()
     
     if not structures:
-        print("[yellow]No data structures to remove![/yellow]")
+        print_warning("No data structures to remove!")
         return
     
-    name = questionary.select(
-        "Select data structure to remove:",
-        choices=list(structures.keys())
-    ).ask()
+    name = styled_select(
+        "Select data structure to remove",
+        list(structures.keys())
+    )
     
-    confirm = questionary.confirm(
-        f"Are you sure you want to remove '{name}'?"
-    ).ask()
+    confirm = styled_confirm(
+        f"Remove '{name}'?",
+        default=False
+    )
     
     if confirm and config_manager.remove_data_structure(name):
-        print(f"\n[green]✔ Removed data structure: {name}[/green]\n")
+        separator()
+        console.print()
+        print_success(f"Removed data structure: {name}")
+        console.print()
     else:
-        print("[yellow]Operation cancelled[/yellow]")
+        print_warning("Operation cancelled")
 
 def main(config: dict):
     """Manage data structures"""
+    print_command_banner("Manage Data Structures")
+    console.print()
+    
     config_manager = ConfigManager()
     
-    action = questionary.select(
+    action = styled_select(
         "What would you like to do?",
-        choices=[
+        [
             "List all data structures",
             "Add new data structure",
             "Remove data structure"
         ]
-    ).ask()
+    )
     
-    if action == "List all data structures":
+    separator()
+    console.print()
+    
+    if "List" in action:
         list_structures(config_manager)
-    elif action == "Add new data structure":
+    elif "Add" in action:
         add_new_structure(config_manager)
-    elif action == "Remove data structure":
+    elif "Remove" in action:
         remove_structure(config_manager)
+
