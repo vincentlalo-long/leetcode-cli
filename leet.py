@@ -18,7 +18,8 @@ def load_config():
 def show_help():
     """Show help with beautiful formatting"""
     print_banner()
-    
+    console.print("[bold yellow]Usage: leet <command> [options][/bold yellow]\n")
+
     console.print("[bold white]Available Commands:[/bold white]\n")
     
     commands = [
