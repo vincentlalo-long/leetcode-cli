@@ -3,7 +3,7 @@ from cli.utils.config_manager import ConfigManager
 from cli.utils.file_utils import create_problem_directory
 from cli.utils.ui import (
     print_command_banner, print_success, print_error, print_info,
-    print_path, styled_text_input, styled_select,
+    print_path, styled_text_input, styled_select, styled_confirm,
     print_section, separator, console
 )
 
@@ -52,19 +52,45 @@ def main(config: dict):
         print_error("Problem file already exists!")
         return
     
-    with open(problem_file, "w") as f:
-        f.write(f"""/*
+    # Ask if user wants to add solution now
+    add_sol_now = styled_confirm("Add solution now?", default=False)
+    
+    content = f"""/*
 LeetCode Problem {problem_num}: {problem_name}
 Data Structure: {selected}
 */
-
-// Solution 1
+"""
+    
+    if add_sol_now:
+        console.print()
+        print_section("Solution Details")
+        method = styled_text_input("Method/Approach")
+        time = styled_text_input("Time complexity")
+        space = styled_text_input("Space complexity")
+        separator()
+        
+        print_info("Paste your code (end with EOF):")
+        lines = []
+        while True:
+            line = input()
+            if line.strip() == "EOF":
+                break
+            lines.append(line)
+        
+        code = "\n".join(lines)
+        
+        content += f"""\n/// ================== Solution 1 ==================
 /*
-Method: 
-Time Complexity: 
-Space Complexity: 
+Method: {method}
+Time Complexity: {time}
+Space Complexity: {space}
 */
-""")
+
+{code}
+"""
+    
+    with open(problem_file, "w") as f:
+        f.write(content)
     
     console.print()
     print_success("Created problem directory and file")
