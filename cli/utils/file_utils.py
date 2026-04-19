@@ -19,7 +19,7 @@ def create_problem_directory(base_dir: str, ds_folder: str, problem_num: str) ->
 
 def count_solutions(content: str) -> int:
     """Count number of solutions in file content"""
-    # Match pattern starting with /// (optionally followed by =) or at least three =
-    pattern = r'///\s*={0,}\s*Solution\s+\d+|={3,}\s*Solution\s+\d+'
+    # Match "Solution" followed by digits (case-insensitive)
+    pattern = r'\bSolution\s+\d+'
     matches = re.findall(pattern, content, re.IGNORECASE)
     return len(matches)
