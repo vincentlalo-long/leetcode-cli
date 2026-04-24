@@ -1,7 +1,5 @@
 # Contributing to LeetCode CLI
 
-Hey there! 🚀
-
 Thank you for considering to contribute to this project! Here are some guidelines to help you get started.
 
 ## Getting Started
@@ -85,10 +83,6 @@ def test_my_new_feature_works_correctly(self):
 - Use descriptive variable and function names
 - Add comments for complex logic
 - Keep functions focused and small
-
-## New Feature: List Problems
-
-This CLI tool now includes a "list" command to display all problems stored in the base directory. This feature helps users quickly view their existing problems without navigating through files manually.
 
 ## Questions?
 
