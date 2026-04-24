@@ -59,6 +59,12 @@ class TestMainFunction:
                 main()
                 mock_add_sol_main.assert_called_once()
 
+    def test_main_recognizes_stats_command(self):
+        with patch.object(sys, 'argv', ['leet', 'stats']):
+            with patch('cli.commands.stats.main') as mock_stats_main:
+                main()
+                mock_stats_main.assert_called_once()
+
 
 class TestConfigValid:
     
@@ -144,3 +150,54 @@ class TestAddFunctionality:
         structures = config_manager.get_data_structures()
         assert isinstance(structures, dict)
         assert len(structures) > 0
+
+
+class TestStatsFunctionality:
+
+    def test_collect_stats_counts_problems_and_solutions(self, tmp_path):
+        from cli.commands.stats import collect_stats
+
+        base_dir = tmp_path
+
+        array_file = base_dir / "array" / "001" / "001_two_sum.cpp"
+        array_file.parent.mkdir(parents=True)
+        array_file.write_text("Solution 1\ncode\nSolution 2\ncode", encoding="utf-8")
+
+        graph_file = base_dir / "graph" / "101" / "101_clone_graph.cpp"
+        graph_file.parent.mkdir(parents=True)
+        graph_file.write_text("Solution 1\ncode", encoding="utf-8")
+
+        stats = collect_stats(
+            str(base_dir),
+            {
+                "array": "array",
+                "graph": "graph",
+            },
+        )
+
+        assert stats["total_problems"] == 2
+        assert stats["total_solutions"] == 3
+        assert stats["by_structure"]["array"] == 1
+        assert stats["by_structure"]["graph"] == 1
+        assert stats["unmatched_problems"] == 0
+
+    def test_collect_stats_tracks_unmatched_files(self, tmp_path):
+        from cli.commands.stats import collect_stats
+
+        base_dir = tmp_path
+
+        misc_file = base_dir / "misc" / "201" / "201_custom.cpp"
+        misc_file.parent.mkdir(parents=True)
+        misc_file.write_text("Solution 1\ncode", encoding="utf-8")
+
+        stats = collect_stats(
+            str(base_dir),
+            {
+                "array": "array",
+            },
+        )
+
+        assert stats["total_problems"] == 1
+        assert stats["total_solutions"] == 1
+        assert stats["by_structure"]["array"] == 0
+        assert stats["unmatched_problems"] == 1
