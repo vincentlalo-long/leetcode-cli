@@ -1,5 +1,6 @@
 import os
 from cli.utils.config_manager import ConfigManager
+from cli.utils.ui import print_error, print_info  # Added imports
 
 def main(config: dict):
     config_manager = ConfigManager()

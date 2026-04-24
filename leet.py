@@ -58,4 +58,4 @@ def main():
         print()
         list_problems.main(config)
     elif cmd == "help":
-        show
+        show_help()  # Fixed typo from 'show' to 'show_help'
