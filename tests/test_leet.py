@@ -65,6 +65,12 @@ class TestMainFunction:
                 main()
                 mock_stats_main.assert_called_once()
 
+    def test_main_recognizes_list_command(self):
+        with patch.object(sys, 'argv', ['leet', 'list']):
+            with patch('cli.commands.list_problems.main') as mock_list_main:
+                main()
+                mock_list_main.assert_called_once()
+
 
 class TestConfigValid:
     
@@ -201,3 +207,49 @@ class TestStatsFunctionality:
         assert stats["total_solutions"] == 1
         assert stats["by_structure"]["array"] == 0
         assert stats["unmatched_problems"] == 1
+
+
+class TestListProblemsFunctionality:
+
+    def test_collect_problems_detects_structure_and_solution_counts(self, tmp_path):
+        from cli.commands.list_problems import collect_problems
+
+        base_dir = tmp_path
+
+        solved_file = base_dir / "array" / "001" / "001_two_sum.cpp"
+        solved_file.parent.mkdir(parents=True)
+        solved_file.write_text("Solution 1\ncode\nSolution 2\ncode", encoding="utf-8")
+
+        unsolved_file = base_dir / "misc" / "900" / "900_custom.cpp"
+        unsolved_file.parent.mkdir(parents=True)
+        unsolved_file.write_text("/* template */", encoding="utf-8")
+
+        records = collect_problems(
+            str(base_dir),
+            {
+                "array": "array",
+            },
+        )
+
+        assert len(records) == 2
+
+        by_name = {record["file_name"]: record for record in records}
+        assert by_name["001_two_sum.cpp"]["structure"] == "array"
+        assert by_name["001_two_sum.cpp"]["solutions"] == 2
+        assert by_name["900_custom.cpp"]["structure"] == "unmatched"
+        assert by_name["900_custom.cpp"]["solutions"] == 0
+
+    def test_filter_problems_by_structure_and_unsolved(self):
+        from cli.commands.list_problems import filter_problems
+
+        records = [
+            {"structure": "array", "solutions": 2},
+            {"structure": "array", "solutions": 0},
+            {"structure": "graph", "solutions": 0},
+        ]
+
+        filtered = filter_problems(records, selected_structure="array", unsolved_only=True)
+
+        assert len(filtered) == 1
+        assert filtered[0]["structure"] == "array"
+        assert filtered[0]["solutions"] == 0

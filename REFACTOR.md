@@ -44,6 +44,14 @@ leet manage-structures
 - Thêm data structure mới
 - Xóa data structure
 
+### 4. Liệt kê và lọc bài toán
+```bash
+leet list
+```
+- Lọc theo data structure (hoặc tất cả)
+- Tùy chọn chỉ hiển thị bài chưa có solution
+- Hiển thị số solution hiện có cho từng bài
+
 ## Tính Năng Mới
 
 ✨ **Thêm Data Structure Tùy Chỉnh**
