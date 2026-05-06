@@ -19,26 +19,28 @@ def load_config():
     config_manager = ConfigManager()
     return config_manager.config
 
+COMMANDS = [
+    ("add", "Create a new problem"),
+    ("add-sol", "Add a solution to a problem"),
+    ("list", "List and filter problems"),
+    ("search", "Search problems by name or number"),
+    ("manage-structures", "Manage data structures"),
+    ("stats", "Show problem statistics"),
+    ("exit", "Exit the CLI"),
+    ("quit", "Exit the CLI"),
+    ("/help", "Show this help message"),
+]
+
+
 def show_help():
     """Show help with beautiful formatting"""
     console.print()
     console.print("[bold yellow]Usage: leet <command> [options][/bold yellow]\n")
     console.print("[bold white]Available Commands:[/bold white]\n")
-    
-    commands = [
-        ("add", "Create a new problem"),
-        ("add-sol", "Add a solution to a problem"),
-        ("list", "List and filter problems"),
-        ("search", "Search problems by name or number"),
-        ("manage-structures", "Manage data structures"),
-        ("stats", "Show problem statistics"),
-        ("exit/quit", "Exit the CLI"),
-        ("/help", "Show this help message"),
-    ]
-    
-    for cmd, desc in commands:
+
+    for cmd, desc in COMMANDS:
         console.print(f"  [bold cyan]{cmd:<20}[/bold cyan] {desc}")
-    
+
     console.print()
 
 def handle_command(config, cmd_string):
@@ -108,7 +110,8 @@ def main():
 
     while True:
         try:
-            command = get_styled_input()
+            available_commands = [cmd for cmd, _ in COMMANDS]
+            command = get_styled_input(available_commands=available_commands)
             if not command.strip():
                 render_status_bar()
                 continue

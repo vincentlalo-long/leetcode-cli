@@ -3,6 +3,7 @@ Modern UI utilities for beautiful CLI styling - Claude Code inspired
 """
 import questionary
 from questionary import Style
+from prompt_toolkit.completion import WordCompleter
 from rich import box
 from rich.console import Console
 from rich.panel import Panel
@@ -146,14 +147,14 @@ def print_menu_footer():
 
 def render_header():
     """Renders the stylized 'IDEAL' logo with ASCII art and gradient colors."""
-    # Define the ASCII art for IDEAL (5 letters only) with color codes
+    # Brighter, multi-tone palette for a more colorful banner
     lines = [
-        " [bold blue]██╗[/bold blue]  [bold magenta]██████╗ [/bold magenta] [bold magenta]███████╗ [/bold magenta] [bold magenta]█████╗ [/bold magenta]  [bold magenta]██╗ [/bold magenta]",
-        " [bold blue]██║[/bold blue]  [bold magenta]██╔══██╗[/bold magenta] [bold magenta]██╔════╝ [/bold magenta] [bold magenta]██╔══██╗[/bold magenta] [bold magenta]██║ [/bold magenta]",
-        " [bold blue]██║[/bold blue]  [bold magenta]██║  ██║[/bold magenta] [bold magenta]█████╗   [/bold magenta] [bold magenta]███████║[/bold magenta] [bold magenta]██║ [/bold magenta]",
-        " [bold blue]██║[/bold blue]  [bold magenta]██║  ██║[/bold magenta] [bold magenta]██╔══╝   [/bold magenta] [bold magenta]██╔══██║[/bold magenta] [bold magenta]██║ [/bold magenta]",
-        " [bold cyan]██║[/bold cyan]  [bold cyan]██████╔╝[/bold cyan] [bold magenta]███████╗ [/bold magenta] [bold magenta]██║  ██║[/bold magenta] [bold magenta]███████╗[/bold magenta]",
-        " [bold cyan]╚═╝[/bold cyan]  [bold cyan]╚═════╝ [/bold cyan] [bold magenta]╚══════╝ [/bold magenta] [bold magenta]╚═╝  ╚═╝[/bold magenta] [bold magenta]╚══════╝[/bold magenta]",
+        " [bold blue]██╗[/bold blue]  [bold magenta]██████╗ [/bold magenta] [bold magenta]███████╗ [/bold magenta] [bold yellow]█████╗ [/bold yellow]  [bold yellow]██╗ [/bold yellow]",
+        " [bold blue]██║[/bold blue]  [bold magenta]██╔══██╗[/bold magenta] [bold magenta]██╔════╝ [/bold magenta] [bold yellow]██╔══██╗[/bold yellow] [bold yellow]██║ [/bold yellow]",
+        " [bold blue]██║[/bold blue]  [bold magenta]██║  ██║[/bold magenta] [bold magenta]█████╗   [/bold magenta] [bold green]███████║[/bold green] [bold green]██║ [/bold green]",
+        " [bold blue]██║[/bold blue]  [bold magenta]██║  ██║[/bold magenta] [bold magenta]██╔══╝   [/bold magenta] [bold green]██╔══██║[/bold green] [bold green]██║ [/bold green]",
+        " [bold cyan]██║[/bold cyan]  [bold cyan]██████╔╝[/bold cyan] [bold magenta]███████╗ [/bold magenta] [bold cyan]██║  ██║[/bold cyan] [bold cyan]███████╗[/bold cyan]",
+        " [bold cyan]╚═╝[/bold cyan]  [bold cyan]╚═════╝ [/bold cyan] [bold magenta]╚══════╝ [/bold magenta] [bold cyan]╚═╝  ╚═╝[/bold cyan] [bold cyan]╚══════╝[/bold cyan]",
     ]
     for line in lines:
         console.print(line)
@@ -195,14 +196,23 @@ def render_status_bar(mode="no sandbox", active_model="IDEAL-core (100%)"):
     console.print()
 
 
-def get_styled_input() -> str:
-    """Renders the input prompt with integrated footer."""
+def get_styled_input(available_commands: Optional[List[str]] = None) -> str:
+    """Renders the input prompt with integrated footer and autocomplete."""
     # Top divider
     console.print("[dim]" + "─" * console.width + "[/dim]")
-    
-    # Styled input request
-    cmd = console.input("[bold cyan]>[/bold cyan] ")
-    
+
+    completer = None
+    if available_commands:
+        completer = WordCompleter(available_commands, ignore_case=True)
+
+    # Styled input request with suggestions
+    cmd = questionary.text(
+        "",
+        style=CLAUDE_STYLE,
+        qmark=">",
+        completer=completer,
+    ).ask()
+
     # Bottom footer integrated with input box
     footer_text = (
         "[dim]Ctrl+C to exit[/dim] • "
@@ -212,8 +222,8 @@ def get_styled_input() -> str:
     console.print("[dim]" + "─" * console.width + "[/dim]")
     console.print(Align(footer_text, align="center"))
     console.print()
-    
-    return cmd
+
+    return cmd or ""
 
 
 def print_banner():
