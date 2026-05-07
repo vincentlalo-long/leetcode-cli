@@ -11,23 +11,92 @@ from rich.syntax import Syntax
 from rich.text import Text
 from rich.columns import Columns
 from rich.align import Align
+from rich.theme import Theme
 from typing import List, Optional
 import os
 
-console = Console()
 DIVIDER_WIDTH = 56
 
-# Claude Code inspired color scheme - remove ? and use > instead
-CLAUDE_STYLE = Style([
-    ('qmark', 'fg:#00D9FF bold'),           # Cyan for question marks → use as >
-    ('question', 'fg:#FFFFFF bold'),        # White for questions
-    ('answer', 'fg:#00D9FF bold'),          # Cyan for answers
-    ('pointer', 'fg:#00D9FF bold'),         # Cyan pointer
-    ('highlighted', 'fg:#000000 bg:#00D9FF'),  # Highlight
-    ('selected', 'fg:#00D9FF bold'),        # Selected
-    ('separator', 'fg:#404040'),            # Dark separator
-    ('instruction', 'fg:#808080'),          # Gray instruction
-])
+THEMES = {
+    "claude": {
+        "rich": Theme({}),
+        "questionary": Style([
+            ('qmark', 'fg:#00D9FF bold'),
+            ('question', 'fg:#FFFFFF bold'),
+            ('answer', 'fg:#00D9FF bold'),
+            ('pointer', 'fg:#00D9FF bold'),
+            ('highlighted', 'fg:#000000 bg:#00D9FF'),
+            ('selected', 'fg:#00D9FF bold'),
+            ('separator', 'fg:#404040'),
+            ('instruction', 'fg:#808080'),
+        ])
+    },
+    "dracula": {
+        "rich": Theme({
+            "cyan": "magenta",
+            "blue": "bright_magenta",
+            "white": "bright_white",
+        }),
+        "questionary": Style([
+            ('qmark', 'fg:#FF79C6 bold'),
+            ('question', 'fg:#F8F8F2 bold'),
+            ('answer', 'fg:#FF79C6 bold'),
+            ('pointer', 'fg:#FF79C6 bold'),
+            ('highlighted', 'fg:#282A36 bg:#FF79C6'),
+            ('selected', 'fg:#FF79C6 bold'),
+            ('separator', 'fg:#6272A4'),
+            ('instruction', 'fg:#6272A4'),
+        ])
+    },
+    "hacker": {
+        "rich": Theme({
+            "cyan": "green",
+            "blue": "green",
+            "magenta": "green",
+            "yellow": "bright_green",
+            "white": "bright_green",
+            "red": "bright_green",
+        }),
+        "questionary": Style([
+            ('qmark', 'fg:#00FF00 bold'),
+            ('question', 'fg:#00FF00 bold'),
+            ('answer', 'fg:#00FF00 bold'),
+            ('pointer', 'fg:#00FF00 bold'),
+            ('highlighted', 'fg:#000000 bg:#00FF00'),
+            ('selected', 'fg:#00FF00 bold'),
+            ('separator', 'fg:#00AA00'),
+            ('instruction', 'fg:#00AA00'),
+        ])
+    },
+    "sunset": {
+        "rich": Theme({
+            "cyan": "color(208)", # orange
+            "blue": "yellow",
+            "magenta": "red",
+        }),
+        "questionary": Style([
+            ('qmark', 'fg:#FF8C00 bold'),
+            ('question', 'fg:#FFFFFF bold'),
+            ('answer', 'fg:#FF8C00 bold'),
+            ('pointer', 'fg:#FF8C00 bold'),
+            ('highlighted', 'fg:#000000 bg:#FF8C00'),
+            ('selected', 'fg:#FF8C00 bold'),
+            ('separator', 'fg:#8B4500'),
+            ('instruction', 'fg:#8B4500'),
+        ])
+    }
+}
+
+console = Console()
+CURRENT_STYLE = THEMES["claude"]["questionary"]
+
+def set_theme(theme_name: str):
+    """Set the active theme for UI components."""
+    global CURRENT_STYLE
+    if theme_name in THEMES:
+        theme = THEMES[theme_name]
+        CURRENT_STYLE = theme["questionary"]
+        console.push_theme(theme["rich"])
 
 def print_header(title: str, subtitle: Optional[str] = None):
     """Print a clean, aligned header panel."""
@@ -77,7 +146,7 @@ def styled_text_input(message: str, default: Optional[str] = None) -> str:
     return questionary.text(
         message,
         default=default or "",
-        style=CLAUDE_STYLE,
+        style=CURRENT_STYLE,
         qmark=">"
     ).ask()
 
@@ -89,7 +158,7 @@ def styled_select(message: str, choices: List[str], use_pointer: bool = True) ->
     return questionary.select(
         message,
         choices=choices,
-        style=CLAUDE_STYLE,
+        style=CURRENT_STYLE,
         use_shortcuts=True,
         qmark=">"
     ).ask()
@@ -102,7 +171,7 @@ def styled_confirm(message: str, default: bool = False) -> bool:
     return questionary.confirm(
         message,
         default=default,
-        style=CLAUDE_STYLE,
+        style=CURRENT_STYLE,
         qmark=">"
     ).ask()
 
@@ -197,10 +266,7 @@ def render_status_bar(mode="no sandbox", active_model="IDEAL-core (100%)"):
 
 
 def get_styled_input(available_commands: Optional[List[str]] = None) -> str:
-    """Renders the input prompt with integrated footer and autocomplete."""
-    # Top divider
-    console.print("[dim]" + "─" * console.width + "[/dim]")
-
+    """Renders the input prompt with autocomplete."""
     completer = None
     if available_commands:
         completer = WordCompleter(available_commands, ignore_case=True)
@@ -208,20 +274,10 @@ def get_styled_input(available_commands: Optional[List[str]] = None) -> str:
     # Styled input request with suggestions
     cmd = questionary.text(
         "",
-        style=CLAUDE_STYLE,
+        style=CURRENT_STYLE,
         qmark=">",
         completer=completer,
     ).ask()
-
-    # Bottom footer integrated with input box
-    footer_text = (
-        "[dim]Ctrl+C to exit[/dim] • "
-        "[dim]/help for commands[/dim] • "
-        "[dim]Type a command to start[/dim]"
-    )
-    console.print("[dim]" + "─" * console.width + "[/dim]")
-    console.print(Align(footer_text, align="center"))
-    console.print()
 
     return cmd or ""
 

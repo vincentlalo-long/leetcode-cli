@@ -7,5 +7,6 @@
     "stack": "stack",
     "graph": "graph",
     "queue": "queue"
-  }
+  },
+  "theme": "dracula"
 }
