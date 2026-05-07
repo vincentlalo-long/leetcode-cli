@@ -25,6 +25,22 @@ class ConfigManager:
         """Get configuration value by key"""
         return self.config.get(key, default)
     
+    def set(self, key: str, value: Any):
+        """Set configuration value and save"""
+        self.config[key] = value
+        self.save_config()
+    
+    def get_theme(self) -> str:
+        """Get the current UI theme"""
+        return self.config.get("theme", "claude")
+    
+    def set_theme(self, theme_name: str) -> bool:
+        """Set the UI theme"""
+        self.config["theme"] = theme_name
+        self.save_config()
+        return True
+
+    
     def get_data_structures(self) -> Dict[str, str]:
         """Get all data structures"""
         return self.config.get("data_structures", {})

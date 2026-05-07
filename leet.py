@@ -8,11 +8,12 @@ from cli.commands import list_problems
 from cli.commands import manage_structures
 from cli.commands import search_problems
 from cli.commands import stats
+from cli.commands import theme
 from cli.utils.config_manager import ConfigManager
 from cli.utils.ui import (
     print_banner, print_small_banner, print_info, print_error, 
     separator, console, render_header, render_info_section, 
-    render_status_bar, get_styled_input
+    render_status_bar, get_styled_input, set_theme
 )
 
 def load_config():
@@ -26,6 +27,7 @@ COMMANDS = [
     ("search", "Search problems by name or number"),
     ("manage-structures", "Manage data structures"),
     ("stats", "Show problem statistics"),
+    ("theme", "Change the UI theme"),
     ("exit", "Exit the CLI"),
     ("quit", "Exit the CLI"),
     ("/help", "Show this help message"),
@@ -78,6 +80,10 @@ def handle_command(config, cmd_string):
         print()
         sys.argv = parts
         stats.main(config)
+    elif cmd == "theme":
+        print()
+        sys.argv = parts
+        theme.main(config)
     elif cmd in ["help", "/help"]:
         show_help()
     else:
@@ -89,6 +95,10 @@ def handle_command(config, cmd_string):
 
 def main():
     config = load_config()
+    
+    # Set UI theme based on config
+    theme_name = config.get("theme", "claude")
+    set_theme(theme_name)
 
     # If arguments are provided (e.g. `leet add`), run once and exit
     if len(sys.argv) > 1:
@@ -110,14 +120,12 @@ def main():
 
     while True:
         try:
+            render_status_bar()
             available_commands = [cmd for cmd, _ in COMMANDS]
             command = get_styled_input(available_commands=available_commands)
             if not command.strip():
-                render_status_bar()
                 continue
                 
-            render_status_bar()
-            
             should_continue = handle_command(config, command)
             if not should_continue:
                 break
