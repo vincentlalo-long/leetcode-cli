@@ -12,6 +12,7 @@ def get_problem_details(title_slug: str) -> Optional[Dict[str, Any]]:
         questionFrontendId
         title
         difficulty
+        content
         topicTags {
           name
         }

@@ -1,4 +1,9 @@
 import os
+try:
+    import markdownify
+except ImportError:
+    markdownify = None
+
 from cli.utils.config_manager import ConfigManager
 from cli.utils.file_utils import create_problem_directory
 from cli.utils.leetcode_api import get_problem_details, slugify, get_problem_by_id
@@ -53,7 +58,9 @@ def main(config: dict):
         )
     
     ds_folder = data_structures[selected]
-    problem_dir = create_problem_directory(base_dir, ds_folder, problem_num)
+    slug = slugify(problem_name)
+    folder_name = f"{problem_num}-{slug}"
+    problem_dir = create_problem_directory(base_dir, ds_folder, folder_name)
     
     if not os.path.exists(problem_dir):
         os.makedirs(problem_dir, exist_ok=True)
@@ -68,7 +75,6 @@ def main(config: dict):
     add_sol_now = styled_confirm("Add solution now?", default=False)
     
     print_info(f"Fetching problem details from LeetCode...")
-    slug = slugify(problem_name)
     details = get_problem_details(slug)
     
     if details:
@@ -123,10 +129,30 @@ Space Complexity: {space}
 {code}
 """
     
-    with open(problem_file, "w") as f:
+    with open(problem_file, "w", encoding="utf-8") as f:
         f.write(content)
+        
+    if details and details.get("content"):
+        readme_path = os.path.join(problem_dir, "README.md")
+        
+        # Convert HTML content to Markdown if markdownify is available
+        raw_content = details.get('content')
+        md_content = raw_content
+        if markdownify:
+            try:
+                md_content = markdownify.markdownify(raw_content, heading_style="ATX")
+            except Exception as e:
+                print_warning(f"Could not convert HTML to Markdown: {e}")
+                
+        # Clean problem number to strip leading zeros if any for display
+        clean_num = str(int(problem_num)) if problem_num.isdigit() else problem_num
+        
+        readme_content = f"# [{clean_num}. {actual_title}]({link})\n\n- **Difficulty:** {difficulty}\n- **Tags:** {tags_str}\n\n## Description\n\n{md_content.strip()}"
+        with open(readme_path, "w", encoding="utf-8") as f:
+            f.write(readme_content)
+        print_success("Saved problem description to README.md")
     
     console.print()
-    print_success("Created problem directory and file")
+    print_success("Created problem directory and files")
     print_path("Path", problem_file)
     console.print()
