@@ -1,6 +1,7 @@
 import os
 from cli.utils.config_manager import ConfigManager
 from cli.utils.file_utils import create_problem_directory
+from cli.utils.leetcode_api import get_problem_details, slugify
 from cli.utils.ui import (
     print_command_banner, print_success, print_error, print_info,
     print_path, styled_text_input, styled_select, styled_confirm,
@@ -55,11 +56,33 @@ def main(config: dict):
     # Ask if user wants to add solution now
     add_sol_now = styled_confirm("Add solution now?", default=False)
     
-    content = f"""/*
+    print_info(f"Fetching problem details from LeetCode...")
+    slug = slugify(problem_name)
+    details = get_problem_details(slug)
+    
+    if details:
+        difficulty = details.get("difficulty", "Unknown")
+        tags = [tag.get("name") for tag in details.get("topicTags", [])]
+        tags_str = ", ".join(tags) if tags else "None"
+        link = f"https://leetcode.com/problems/{slug}/"
+        actual_title = details.get("title", problem_name)
+        
+        content = f"""/*
+LeetCode Problem {problem_num}: {actual_title}
+Link: {link}
+Difficulty: {difficulty}
+Tags: {tags_str}
+Data Structure: {selected}
+*/
+"""
+        print_success(f"Found: {actual_title} ({difficulty})")
+    else:
+        content = f"""/*
 LeetCode Problem {problem_num}: {problem_name}
 Data Structure: {selected}
 */
 """
+        print_error(f"Could not fetch problem details for '{problem_name}'. Using basic template.")
     
     if add_sol_now:
         console.print()
