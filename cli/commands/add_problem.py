@@ -1,9 +1,9 @@
 import os
 from cli.utils.config_manager import ConfigManager
 from cli.utils.file_utils import create_problem_directory
-from cli.utils.leetcode_api import get_problem_details, slugify
+from cli.utils.leetcode_api import get_problem_details, slugify, get_problem_by_id
 from cli.utils.ui import (
-    print_command_banner, print_success, print_error, print_info,
+    print_command_banner, print_success, print_error, print_info, print_warning,
     print_path, styled_text_input, styled_select, styled_confirm,
     print_section, separator, console
 )
@@ -17,7 +17,18 @@ def main(config: dict):
     
     # Get problem information
     problem_num = styled_text_input("Problem number")
-    problem_name = styled_text_input("Problem name")
+    
+    # Try to fetch problem name by ID
+    suggested_name = ""
+    print_info("Looking up problem details...")
+    problem_data = get_problem_by_id(problem_num)
+    if problem_data:
+        suggested_name = problem_data["title"]
+        print_success(f"Found: {suggested_name}")
+    else:
+        print_warning(f"Could not find problem with ID {problem_num}")
+        
+    problem_name = styled_text_input("Problem name", default=suggested_name)
     
     # Get or manage data structures
     data_structures = config_manager.get_data_structures()
