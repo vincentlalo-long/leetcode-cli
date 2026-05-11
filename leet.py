@@ -88,9 +88,8 @@ def handle_command(config, cmd_string):
         show_help()
     else:
         print()
-        print_error(f"Unknown command: '{cmd}'")
+        print_error(f"Unknown command: '{cmd}'. Type 'help' to see available commands.")
         print()
-        show_help()
     return True
 
 def main():
