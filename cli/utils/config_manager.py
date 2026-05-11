@@ -40,6 +40,15 @@ class ConfigManager:
         self.save_config()
         return True
 
+    def get_editor(self) -> str:
+        """Get the configured editor, default to code (VS Code)"""
+        return self.config.get("editor", "code")
+
+    def set_editor(self, editor: str) -> bool:
+        """Set the configured editor"""
+        self.config["editor"] = editor
+        self.save_config()
+        return True
     
     def get_data_structures(self) -> Dict[str, str]:
         """Get all data structures"""

@@ -74,7 +74,7 @@ def main(config: Dict[str, Any]):
         print_error("No data structures found. Add one first!")
         return
         
-    choices = list(data_structures.keys()) + ["Add new data structure"]
+    choices = ["[Uncategorized]"] + list(data_structures.keys()) + ["Add new data structure"]
     selected = styled_select("Select data structure", choices)
     
     if selected == "Add new data structure":
@@ -82,9 +82,10 @@ def main(config: Dict[str, Any]):
         if not add_new_structure(config_manager):
             return
         data_structures = config_manager.get_data_structures()
-        selected = styled_select("Select data structure", list(data_structures.keys()))
+        choices = ["[Uncategorized]"] + list(data_structures.keys())
+        selected = styled_select("Select data structure", choices)
         
-    ds_folder = data_structures[selected]
+    ds_folder = "uncategorized" if selected == "[Uncategorized]" else data_structures[selected]
     folder_name = f"{problem_num}-{slug}"
     problem_dir = create_problem_directory(base_dir, ds_folder, folder_name)
     
@@ -115,6 +116,23 @@ Difficulty: {difficulty}
 Tags: {tags_str}
 Data Structure: {selected}
 */
+
+#include <iostream>
+#include <vector>
+#include <string>
+
+using namespace std;
+
+// class Solution {{
+// public:
+//     
+// }};
+
+int main() {{
+    // Solution sol;
+    cout << "Test cases go here!" << endl;
+    return 0;
+}}
 """
     
     with open(problem_file, "w", encoding="utf-8") as f:
