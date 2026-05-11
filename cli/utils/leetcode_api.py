@@ -13,6 +13,7 @@ def get_problem_details(title_slug: str) -> Optional[Dict[str, Any]]:
         title
         difficulty
         content
+        hints
         topicTags {
           name
         }
@@ -103,3 +104,13 @@ def get_problem_by_id(frontend_id: str) -> Optional[Dict[str, str]]:
     except requests.exceptions.RequestException:
         pass
     return None
+
+def get_all_problems() -> Optional[Dict[str, Any]]:
+    """Fetch the list of all problems from LeetCode."""
+    url = "https://leetcode.com/api/problems/all/"
+    try:
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException:
+        return None
