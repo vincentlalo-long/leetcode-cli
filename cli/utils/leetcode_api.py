@@ -36,6 +36,44 @@ def get_problem_details(title_slug: str) -> Optional[Dict[str, Any]]:
     except requests.exceptions.RequestException:
         return None
 
+def get_daily_challenge() -> Optional[Dict[str, Any]]:
+    """Fetch the current daily challenge from LeetCode."""
+    url = "https://leetcode.com/graphql"
+    query = """
+    query questionOfToday {
+      activeDailyCodingChallengeQuestion {
+        date
+        userStatus
+        link
+        question {
+          questionId
+          questionFrontendId
+          title
+          titleSlug
+          difficulty
+          topicTags {
+            name
+          }
+        }
+      }
+    }
+    """
+    headers = {
+        "Content-Type": "application/json",
+        "Referer": "https://leetcode.com"
+    }
+    payload = {"query": query}
+    
+    try:
+        response = requests.post(url, json=payload, headers=headers, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+        if "errors" in data or not data.get("data", {}).get("activeDailyCodingChallengeQuestion"):
+            return None
+        return data["data"]["activeDailyCodingChallengeQuestion"]["question"]
+    except requests.exceptions.RequestException:
+        return None
+
 def slugify(text: str) -> str:
     """Convert text to a URL-friendly slug."""
     text = text.lower()
