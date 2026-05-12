@@ -1,11 +1,12 @@
 import os
+import random
 from typing import Any, Dict
 try:
     import markdownify
 except ImportError:
     markdownify = None
 
-from cli.utils.leetcode_api import get_daily_challenge, slugify
+from cli.utils.leetcode_api import get_all_problems, get_problem_details, slugify
 from cli.utils.file_utils import create_problem_directory
 from cli.utils.config_manager import ConfigManager
 from cli.utils.ui import (
@@ -15,28 +16,50 @@ from cli.utils.ui import (
 )
 
 def main(config: Dict[str, Any]):
-    """Fetch and optionally add the LeetCode daily challenge"""
-    print_command_banner("LeetCode Daily Challenge")
+    """Fetch a random LeetCode problem based on difficulty preference."""
+    print_command_banner("Random LeetCode Problem")
     
-    print_info("Fetching daily challenge...")
-    daily = get_daily_challenge()
+    difficulty_choices = ["Any", "Easy", "Medium", "Hard"]
+    selected_difficulty = styled_select("Select difficulty level", difficulty_choices)
     
-    if not daily:
-        print_error("Could not fetch daily challenge. Please check your connection.")
+    print_info("Fetching problems...")
+    data = get_all_problems()
+    
+    if not data or "stat_status_pairs" not in data:
+        print_error("Could not fetch problems. Please check your connection.")
         return
         
-    problem_num = daily.get("questionFrontendId")
-    problem_name = daily.get("title")
-    slug = daily.get("titleSlug")
-    difficulty = daily.get("difficulty")
-    tags = [tag.get("name") for tag in daily.get("topicTags", [])]
-    tags_str = ", ".join(tags) if tags else "None"
+    problems = data["stat_status_pairs"]
+    
+    # Map selection to LeetCode API difficulty levels (1=Easy, 2=Medium, 3=Hard)
+    diff_map = {"Easy": 1, "Medium": 2, "Hard": 3}
+    
+    # Filter for unpaid problems
+    candidates = [p for p in problems if not p.get("paid_only")]
+    
+    if selected_difficulty != "Any":
+        target_level = diff_map[selected_difficulty]
+        candidates = [p for p in candidates if p.get("difficulty", {}).get("level") == target_level]
+        
+    if not candidates:
+        print_error(f"No free {selected_difficulty} problems found.")
+        return
+        
+    problem = random.choice(candidates)
+    
+    problem_num = str(problem["stat"]["frontend_question_id"])
+    problem_name = problem["stat"]["question__title"]
+    slug = problem["stat"]["question__title_slug"]
+    
+    # LeetCode difficulty names mapping
+    level_to_name = {1: "Easy", 2: "Medium", 3: "Hard"}
+    difficulty = level_to_name.get(problem.get("difficulty", {}).get("level"), "Unknown")
+    
     link = f"https://leetcode.com/problems/{slug}/"
     
-    print_section("Today's Problem")
+    print_section("Your Random Problem")
     console.print(f"  [bold white]{problem_num}. {problem_name}[/bold white]")
     console.print(f"  [dim]Difficulty:[/dim] [bold]{difficulty}[/bold]")
-    console.print(f"  [dim]Tags:[/dim] {tags_str}")
     console.print(f"  [dim]Link:[/dim] [blue]{link}[/blue]")
     console.print()
     
@@ -76,6 +99,15 @@ def main(config: Dict[str, Any]):
         print_path("Path", problem_file)
         return
         
+    # Get full details for tags and description
+    print_info("Fetching full problem details...")
+    details = get_problem_details(slug)
+    
+    tags_str = "None"
+    if details:
+        tags = [tag.get("name") for tag in details.get("topicTags", [])]
+        tags_str = ", ".join(tags) if tags else "None"
+        
     # Content template
     content = f"""/*
 LeetCode Problem {problem_num}: {problem_name}
@@ -106,13 +138,6 @@ int main() {{
     with open(problem_file, "w", encoding="utf-8") as f:
         f.write(content)
         
-    # Handle README.md if content is available
-    # For daily challenge, we might need to fetch full details again if content is missing
-    # but GraphQL query for daily often includes some info. 
-    # Let's try to get full details for the description.
-    from cli.utils.leetcode_api import get_problem_details
-    details = get_problem_details(slug)
-    
     if details and details.get("content"):
         readme_path = os.path.join(problem_dir, "README.md")
         raw_content = details.get('content')

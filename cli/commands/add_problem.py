@@ -38,11 +38,7 @@ def main(config: dict):
     # Get or manage data structures
     data_structures = config_manager.get_data_structures()
     
-    if not data_structures:
-        print_error("No data structures found. Add one first!")
-        return
-    
-    choices = list(data_structures.keys()) + ["Add new data structure"]
+    choices = ["[Uncategorized]"] + list(data_structures.keys()) + ["Add new data structure"]
     selected = styled_select("Select data structure", choices)
     
     # If user wants to add new data structure
@@ -52,12 +48,10 @@ def main(config: dict):
             return
         # Reload data structures and ask again
         data_structures = config_manager.get_data_structures()
-        selected = styled_select(
-            "Select data structure",
-            list(data_structures.keys())
-        )
+        choices = ["[Uncategorized]"] + list(data_structures.keys())
+        selected = styled_select("Select data structure", choices)
     
-    ds_folder = data_structures[selected]
+    ds_folder = "uncategorized" if selected == "[Uncategorized]" else data_structures[selected]
     slug = slugify(problem_name)
     folder_name = f"{problem_num}-{slug}"
     problem_dir = create_problem_directory(base_dir, ds_folder, folder_name)
@@ -91,6 +85,23 @@ Difficulty: {difficulty}
 Tags: {tags_str}
 Data Structure: {selected}
 */
+
+#include <iostream>
+#include <vector>
+#include <string>
+
+using namespace std;
+
+// class Solution {{
+// public:
+//     
+// }};
+
+int main() {{
+    // Solution sol;
+    cout << "Test cases go here!" << endl;
+    return 0;
+}}
 """
         print_success(f"Found: {actual_title} ({difficulty})")
     else:
@@ -98,6 +109,23 @@ Data Structure: {selected}
 LeetCode Problem {problem_num}: {problem_name}
 Data Structure: {selected}
 */
+
+#include <iostream>
+#include <vector>
+#include <string>
+
+using namespace std;
+
+// class Solution {{
+// public:
+//     
+// }};
+
+int main() {{
+    // Solution sol;
+    cout << "Test cases go here!" << endl;
+    return 0;
+}}
 """
         print_error(f"Could not fetch problem details for '{problem_name}'. Using basic template.")
     

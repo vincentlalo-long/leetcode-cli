@@ -5,8 +5,12 @@ import sys
 from cli.commands import add_problem
 from cli.commands import add_solution
 from cli.commands import daily
+from cli.commands import hint
 from cli.commands import list_problems
 from cli.commands import manage_structures
+from cli.commands import open_problem
+from cli.commands import random_problem
+from cli.commands import run_problem
 from cli.commands import search_problems
 from cli.commands import stats
 from cli.commands import theme
@@ -30,6 +34,10 @@ COMMANDS = [
     ("stats", "Show problem statistics"),
     ("theme", "Change the UI theme"),
     ("daily", "Get and add LeetCode daily challenge"),
+    ("random", "Get a random LeetCode problem"),
+    ("hint", "Get hints for a specific problem"),
+    ("open", "Open problem description and code editor"),
+    ("run", "Compile and run C++ code locally"),
     ("exit", "Exit the CLI"),
     ("quit", "Exit the CLI"),
     ("/help", "Show this help message"),
@@ -90,6 +98,22 @@ def handle_command(config, cmd_string):
         print()
         sys.argv = parts
         daily.main(config)
+    elif cmd == "random":
+        print()
+        sys.argv = parts
+        random_problem.main(config)
+    elif cmd == "hint":
+        print()
+        sys.argv = parts
+        hint.main(config)
+    elif cmd == "open":
+        print()
+        sys.argv = parts
+        open_problem.main(config)
+    elif cmd == "run":
+        print()
+        sys.argv = parts
+        run_problem.main(config)
     elif cmd in ["help", "/help"]:
         show_help()
     else:
