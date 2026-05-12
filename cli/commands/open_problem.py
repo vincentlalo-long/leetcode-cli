@@ -8,7 +8,7 @@ from cli.utils.file_utils import get_all_cpp_files
 from cli.utils.config_manager import ConfigManager
 from cli.utils.ui import (
     print_command_banner, print_success, print_error, print_info, print_warning,
-    styled_text_input, styled_confirm, console
+    styled_text_input, styled_confirm, styled_select, console
 )
 
 def main(config: Dict[str, Any]):
@@ -65,11 +65,26 @@ def main(config: Dict[str, Any]):
     if (has_wt or has_tmux) and styled_confirm("Open in split-terminal layout? (Left: Editor, Right: Tests & Terminal)", default=True):
         if editor.lower() == "code":
             print_warning("VS Code ('code') opens a separate GUI. For split-terminal, 'nvim', 'vim', or 'nano' is recommended.")
-            editor = styled_text_input("Enter CLI editor to use (e.g., nvim)", default="nvim")
+            
+        # On Windows, we can choose the shell for the panes
+        shell_cmd = "powershell"
+        if platform.system() == "Windows":
+            shell_choices = ["PowerShell", "Git Bash (bash)", "Ubuntu (wsl)"]
+            selected_shell = styled_select("Select shell for the split panes", shell_choices)
+            if "wsl" in selected_shell.lower():
+                shell_cmd = "wsl"
+                if editor.lower() in ["code", "nvim", "vim", "nano"]:
+                    editor = f"wsl {editor}" # Use wsl version of the editor
+            elif "bash" in selected_shell.lower():
+                shell_cmd = "bash"
+                
+        # Ask for editor if it's still default or if user wants to change
+        if editor.lower() == "code" or styled_confirm(f"Use '{editor}' as editor?", default=True) is False:
+            editor = styled_text_input("Enter CLI editor to use (e.g., nvim, wsl nvim)", default="nvim")
             
         read_cmd = ""
         if os.path.exists(readme_path):
-            if platform.system() == "Windows":
+            if shell_cmd == "powershell":
                 read_cmd = f"type README.md ; "
             else:
                 read_cmd = f"cat README.md ; "
@@ -77,32 +92,35 @@ def main(config: Dict[str, Any]):
         target_basename = os.path.basename(target_file)
         
         if has_tmux:
+            # (tmux logic remains same)
             print_info(f"Launching Tmux split layout with {editor}...")
             try:
                 if os.environ.get("TMUX"):
-                    # Already inside tmux, split current window
                     subprocess.run(["tmux", "split-window", "-h", "-c", target_dir, f"{read_cmd} echo ''; echo '--- READY ---'; exec bash"])
                     subprocess.run(["tmux", "split-window", "-v", "-c", target_dir, "bash"])
-                    subprocess.run(["tmux", "select-pane", "-L"]) # focus back to left pane
-                    # Execute editor replacing the current Python process in this pane
+                    subprocess.run(["tmux", "select-pane", "-L"])
                     os.execlp(editor, editor, target_file)
                 else:
-                    # Not in tmux, create a new session
                     session_name = f"leet_{problem_num}"
                     subprocess.run(["tmux", "new-session", "-d", "-s", session_name, "-c", target_dir, f"{editor} '{target_basename}'"])
                     subprocess.run(["tmux", "split-window", "-h", "-t", session_name, "-c", target_dir, f"{read_cmd} echo ''; echo '--- READY ---'; exec bash"])
                     subprocess.run(["tmux", "split-window", "-v", "-t", session_name, "-c", target_dir, "bash"])
-                    # Attach to the new session
                     os.execlp("tmux", "tmux", "attach", "-t", session_name)
             except Exception as e:
                 print_error(f"Failed to launch Tmux: {e}")
         elif has_wt:
-            print_info(f"Launching Windows Terminal split layout with {editor}...")
+            print_info(f"Launching Windows Terminal split layout ({shell_cmd}) with {editor}...")
+            
+            # For Windows Terminal, if using wsl, we need to handle paths carefully
+            # but wt -d . wsl works fine as it starts in the directory.
+            
             wt_args = [
-                "wt", "-d", target_dir, editor, target_basename,
-                ";", "split-pane", "-V", "-d", target_dir, "powershell", "-noexit", "-Command", f"{read_cmd} echo ''; echo '--- READY ---'",
-                ";", "split-pane", "-H", "-d", target_dir, "powershell"
+                "wt", "-d", target_dir, "powershell", "-Command", f"{editor} {target_basename}",
+                ";", "split-pane", "-V", "-d", target_dir, shell_cmd, "-Command" if shell_cmd == "powershell" else "-c",
+                f"{read_cmd} echo ''; echo '--- READY ---'; {'pause' if shell_cmd == 'powershell' else 'exec bash'}",
+                ";", "split-pane", "-H", "-d", target_dir, shell_cmd
             ]
+            
             try:
                 subprocess.Popen(wt_args)
                 print_success("Split terminal launched successfully!")
