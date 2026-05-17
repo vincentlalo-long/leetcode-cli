@@ -1,5 +1,12 @@
 {
   "base_dir": "D:/leetcode",
+  "languages": {
+    "cpp": "cpp",
+    "c": "c",
+    "python": "py",
+    "go": "go"
+  },
+  "default_language": "cpp",
   "data_structures": {
     "array": "array",
     "string": "string",

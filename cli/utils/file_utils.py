@@ -11,6 +11,20 @@ def get_all_cpp_files(base_dir: str) -> List[str]:
                 files.append(os.path.join(root, filename))
     return sorted(files)
 
+
+def get_all_solution_files(base_dir: str, extensions: List[str]) -> List[str]:
+    """Get all solution files matching extensions recursively from base directory"""
+    normalized_exts = {
+        f".{ext.lstrip('.').lower()}" for ext in extensions if ext
+    }
+    files = []
+    for root, _, filenames in os.walk(base_dir):
+        for filename in filenames:
+            _, ext = os.path.splitext(filename)
+            if ext.lower() in normalized_exts:
+                files.append(os.path.join(root, filename))
+    return sorted(files)
+
 def create_problem_directory(base_dir: str, ds_folder: str, problem_num: str) -> str:
     """Create problem directory and return the path"""
     problem_dir = os.path.join(base_dir, ds_folder, problem_num)

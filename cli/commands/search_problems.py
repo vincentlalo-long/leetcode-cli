@@ -3,7 +3,8 @@ import os
 import re
 from typing import Any, Dict, List
 
-from cli.utils.file_utils import get_all_cpp_files
+from cli.utils.config_manager import ConfigManager
+from cli.utils.file_utils import get_all_solution_files
 from cli.utils.ui import (
     console,
     print_header,
@@ -34,9 +35,15 @@ def count_solutions(content: str) -> int:
     return len(matches)
 
 
-def collect_all_problems(base_dir: str, data_structures: Dict[str, str]) -> List[Dict[str, Any]]:
+def collect_all_problems(
+    base_dir: str,
+    data_structures: Dict[str, str],
+    extensions: List[str] = None,
+) -> List[Dict[str, Any]]:
     """Collect all problem files with detected structure and solution count."""
-    files = get_all_cpp_files(base_dir)
+    if extensions is None:
+        extensions = ["cpp"]
+    files = get_all_solution_files(base_dir, extensions)
     records: List[Dict[str, Any]] = []
 
     for file_path in files:
@@ -131,7 +138,10 @@ def main(config: Dict[str, Any]) -> None:
 
     # Collect all problems
     print_info("Searching problems...")
-    all_problems = collect_all_problems(base_dir, data_structures)
+    config_manager = ConfigManager()
+    languages = config_manager.get_languages()
+    extensions = [info["ext"] for info in languages.values()]
+    all_problems = collect_all_problems(base_dir, data_structures, extensions)
 
     if not all_problems:
         print_error("No problems found in the base directory.")

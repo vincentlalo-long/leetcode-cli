@@ -37,7 +37,7 @@ COMMANDS = [
     ("random", "Get a random LeetCode problem"),
     ("hint", "Get hints for a specific problem"),
     ("open", "Open problem description and code editor"),
-    ("run", "Compile and run C++ code locally"),
+    ("run", "Compile or run code locally"),
     ("exit", "Exit the CLI"),
     ("quit", "Exit the CLI"),
     ("/help", "Show this help message"),

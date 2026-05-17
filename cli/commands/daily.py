@@ -7,6 +7,10 @@ except ImportError:
 
 from cli.utils.leetcode_api import get_daily_challenge, slugify
 from cli.utils.file_utils import create_problem_directory
+from cli.utils.language_support import (
+    build_problem_template,
+    get_language_choices,
+)
 from cli.utils.config_manager import ConfigManager
 from cli.utils.ui import (
     print_command_banner, print_success, print_error, print_info, print_warning,
@@ -63,13 +67,20 @@ def main(config: Dict[str, Any]):
         selected = styled_select("Select data structure", choices)
         
     ds_folder = "uncategorized" if selected == "[Uncategorized]" else data_structures[selected]
+
+    languages = config_manager.get_languages()
+    default_language = config_manager.get_default_language()
+    language_choices, language_map = get_language_choices(languages, default_language)
+    language_choice = styled_select("Select language", language_choices)
+    language_key = language_map[language_choice]
+    language_ext = languages[language_key]["ext"]
     folder_name = f"{problem_num}-{slug}"
     problem_dir = create_problem_directory(base_dir, ds_folder, folder_name)
     
     if not os.path.exists(problem_dir):
         os.makedirs(problem_dir, exist_ok=True)
         
-    problem_file = os.path.join(problem_dir, f"{problem_num}_{problem_name}.cpp")
+    problem_file = os.path.join(problem_dir, f"{problem_num}_{problem_name}.{language_ext}")
     
     if os.path.exists(problem_file):
         print_warning("Problem file already exists!")
@@ -77,31 +88,15 @@ def main(config: Dict[str, Any]):
         return
         
     # Content template
-    content = f"""/*
-LeetCode Problem {problem_num}: {problem_name}
-Link: {link}
-Difficulty: {difficulty}
-Tags: {tags_str}
-Data Structure: {selected}
-*/
-
-#include <iostream>
-#include <vector>
-#include <string>
-
-using namespace std;
-
-// class Solution {{
-// public:
-//     
-// }};
-
-int main() {{
-    // Solution sol;
-    cout << "Test cases go here!" << endl;
-    return 0;
-}}
-"""
+    content = build_problem_template(
+        language_key,
+        problem_num,
+        problem_name,
+        link,
+        difficulty,
+        tags_str,
+        selected,
+    )
     
     with open(problem_file, "w", encoding="utf-8") as f:
         f.write(content)

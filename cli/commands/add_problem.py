@@ -6,6 +6,11 @@ except ImportError:
 
 from cli.utils.config_manager import ConfigManager
 from cli.utils.file_utils import create_problem_directory
+from cli.utils.language_support import (
+    build_problem_template,
+    build_solution_block,
+    get_language_choices,
+)
 from cli.utils.leetcode_api import get_problem_details, slugify, get_problem_by_id
 from cli.utils.ui import (
     print_command_banner, print_success, print_error, print_info, print_warning,
@@ -52,6 +57,13 @@ def main(config: dict):
         selected = styled_select("Select data structure", choices)
     
     ds_folder = "uncategorized" if selected == "[Uncategorized]" else data_structures[selected]
+
+    languages = config_manager.get_languages()
+    default_language = config_manager.get_default_language()
+    language_choices, language_map = get_language_choices(languages, default_language)
+    language_choice = styled_select("Select language", language_choices)
+    language_key = language_map[language_choice]
+    language_ext = languages[language_key]["ext"]
     slug = slugify(problem_name)
     folder_name = f"{problem_num}-{slug}"
     problem_dir = create_problem_directory(base_dir, ds_folder, folder_name)
@@ -59,7 +71,7 @@ def main(config: dict):
     if not os.path.exists(problem_dir):
         os.makedirs(problem_dir, exist_ok=True)
     
-    problem_file = os.path.join(problem_dir, f"{problem_num}_{problem_name}.cpp")
+    problem_file = os.path.join(problem_dir, f"{problem_num}_{problem_name}.{language_ext}")
     
     if os.path.exists(problem_file):
         print_error("Problem file already exists!")
@@ -78,55 +90,26 @@ def main(config: dict):
         link = f"https://leetcode.com/problems/{slug}/"
         actual_title = details.get("title", problem_name)
         
-        content = f"""/*
-LeetCode Problem {problem_num}: {actual_title}
-Link: {link}
-Difficulty: {difficulty}
-Tags: {tags_str}
-Data Structure: {selected}
-*/
-
-#include <iostream>
-#include <vector>
-#include <string>
-
-using namespace std;
-
-// class Solution {{
-// public:
-//     
-// }};
-
-int main() {{
-    // Solution sol;
-    cout << "Test cases go here!" << endl;
-    return 0;
-}}
-"""
+        content = build_problem_template(
+            language_key,
+            problem_num,
+            actual_title,
+            link,
+            difficulty,
+            tags_str,
+            selected,
+        )
         print_success(f"Found: {actual_title} ({difficulty})")
     else:
-        content = f"""/*
-LeetCode Problem {problem_num}: {problem_name}
-Data Structure: {selected}
-*/
-
-#include <iostream>
-#include <vector>
-#include <string>
-
-using namespace std;
-
-// class Solution {{
-// public:
-//     
-// }};
-
-int main() {{
-    // Solution sol;
-    cout << "Test cases go here!" << endl;
-    return 0;
-}}
-"""
+        content = build_problem_template(
+            language_key,
+            problem_num,
+            problem_name,
+            "",
+            "Unknown",
+            "None",
+            selected,
+        )
         print_error(f"Could not fetch problem details for '{problem_name}'. Using basic template.")
     
     if add_sol_now:
@@ -147,15 +130,14 @@ int main() {{
         
         code = "\n".join(lines)
         
-        content += f"""\n/// ================== Solution 1 ==================
-/*
-Method: {method}
-Time Complexity: {time}
-Space Complexity: {space}
-*/
-
-{code}
-"""
+        content += build_solution_block(
+            language_key,
+            1,
+            method,
+            time,
+            space,
+            code,
+        )
     
     with open(problem_file, "w", encoding="utf-8") as f:
         f.write(content)

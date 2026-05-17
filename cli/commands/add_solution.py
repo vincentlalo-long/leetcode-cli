@@ -1,5 +1,8 @@
+import os
+
 from cli.utils.config_manager import ConfigManager
-from cli.utils.file_utils import get_all_cpp_files, count_solutions
+from cli.utils.file_utils import get_all_solution_files, count_solutions
+from cli.utils.language_support import build_solution_block, get_language_by_extension
 from cli.utils.ui import (
     print_command_banner, print_success, print_error, print_info,
     print_section, styled_select, styled_text_input,
@@ -13,8 +16,11 @@ def main(config: dict):
     config_manager = ConfigManager()
     base_dir = config["base_dir"]
     
-    # Get all .cpp files
-    files = get_all_cpp_files(base_dir)
+    languages = config_manager.get_languages()
+    extensions = [info["ext"] for info in languages.values()]
+
+    # Get all solution files
+    files = get_all_solution_files(base_dir, extensions)
     
     if not files:
         print_error("No problem files found!")
@@ -50,17 +56,19 @@ def main(config: dict):
     
     code = "\n".join(lines)
     
-    new_block = f"""
+    _, ext = os.path.splitext(file_path)
+    language_key = get_language_by_extension(languages, ext)
+    if not language_key:
+        language_key = config_manager.get_default_language()
 
-/// ================== Solution {sol_num} ==================
-/*
-Method: {method}
-Time Complexity: {time}
-Space Complexity: {space}
-*/
-
-{code}
-"""
+    new_block = build_solution_block(
+        language_key,
+        sol_num,
+        method,
+        time,
+        space,
+        code,
+    )
     
     with open(file_path, "a") as f:
         f.write(new_block)
