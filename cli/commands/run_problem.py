@@ -10,7 +10,7 @@ from cli.utils.file_utils import get_all_solution_files
 from cli.utils.language_support import get_language_by_extension
 from cli.utils.ui import (
     print_command_banner, print_success, print_error, print_info, print_warning,
-    styled_text_input, console
+    styled_text_input, styled_select, console
 )
 
 def _matches_problem_number(filename: str, problem_num: str) -> bool:
