@@ -2,7 +2,9 @@ import os
 import re
 from typing import Any, Dict, List
 
-from cli.utils.file_utils import count_solutions, get_all_cpp_files
+from cli.utils.config_manager import ConfigManager
+
+from cli.utils.file_utils import count_solutions, get_all_solution_files
 from cli.utils.ui import (
     console,
     print_command_banner,
@@ -28,9 +30,15 @@ def detect_structure(file_path: str, data_structures: Dict[str, str]) -> str:
     return "unmatched"
 
 
-def collect_problems(base_dir: str, data_structures: Dict[str, str]) -> List[Dict[str, Any]]:
+def collect_problems(
+    base_dir: str,
+    data_structures: Dict[str, str],
+    extensions: List[str] = None,
+) -> List[Dict[str, Any]]:
     """Collect all problem files with detected structure and solution count."""
-    files = get_all_cpp_files(base_dir)
+    if extensions is None:
+        extensions = ["cpp"]
+    files = get_all_solution_files(base_dir, extensions)
     records: List[Dict[str, Any]] = []
 
     for file_path in files:
@@ -93,7 +101,10 @@ def main(config: Dict[str, Any]):
         print_warning(f"Base directory does not exist: {base_dir}")
         return
 
-    records = collect_problems(base_dir, data_structures)
+    config_manager = ConfigManager()
+    languages = config_manager.get_languages()
+    extensions = [info["ext"] for info in languages.values()]
+    records = collect_problems(base_dir, data_structures, extensions)
 
     if not records:
         print_info("No problem files found")

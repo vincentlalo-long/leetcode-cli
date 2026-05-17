@@ -1,7 +1,8 @@
 import os
-from typing import Dict, Any
+from typing import Dict, Any, List
 
-from cli.utils.file_utils import count_solutions, get_all_cpp_files
+from cli.utils.config_manager import ConfigManager
+from cli.utils.file_utils import count_solutions, get_all_solution_files
 from cli.utils.ui import (
     print_command_banner,
     print_error,
@@ -13,8 +14,14 @@ from cli.utils.ui import (
 )
 
 
-def collect_stats(base_dir: str, data_structures: Dict[str, str]) -> Dict[str, Any]:
-    files = get_all_cpp_files(base_dir)
+def collect_stats(
+    base_dir: str,
+    data_structures: Dict[str, str],
+    extensions: List[str] = None,
+) -> Dict[str, Any]:
+    if extensions is None:
+        extensions = ["cpp"]
+    files = get_all_solution_files(base_dir, extensions)
 
     by_structure = {name: 0 for name in data_structures}
     unmatched_problems = 0
@@ -67,7 +74,10 @@ def main(config: Dict[str, Any]):
         print_warning(f"Base directory does not exist: {base_dir}")
         return
 
-    stats = collect_stats(base_dir, data_structures)
+    config_manager = ConfigManager()
+    languages = config_manager.get_languages()
+    extensions = [info["ext"] for info in languages.values()]
+    stats = collect_stats(base_dir, data_structures, extensions)
 
     print_section("Overview")
     print_list_item("Base directory", base_dir)

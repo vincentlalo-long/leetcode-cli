@@ -4,7 +4,7 @@ import platform
 import shutil
 from typing import Any, Dict
 
-from cli.utils.file_utils import get_all_cpp_files
+from cli.utils.file_utils import get_all_solution_files
 from cli.utils.config_manager import ConfigManager
 from cli.utils.ui import (
     print_command_banner, print_success, print_error, print_info, print_warning,
@@ -23,24 +23,40 @@ def main(config: Dict[str, Any]):
         return
         
     print_info("Searching for problem...")
-    cpp_files = get_all_cpp_files(base_dir)
-    
+    config_manager = ConfigManager()
+    languages = config_manager.get_languages()
+    extensions = [info["ext"] for info in languages.values()]
+    all_files = get_all_solution_files(base_dir, extensions)
+
+    matches = []
+    for file_path in all_files:
+        basename = os.path.basename(file_path)
+        if basename.startswith(f"{problem_num}_") or (
+            problem_num.isdigit()
+            and (
+                basename.startswith(f"{int(problem_num):03d}_")
+                or basename.startswith(f"{int(problem_num):04d}_")
+            )
+        ):
+            matches.append(file_path)
+
     target_file = None
     target_dir = None
-    
-    # We look for a file starting with '{problem_num}_' or having '{problem_num}' in the filename
-    for f in cpp_files:
-        basename = os.path.basename(f)
-        if basename.startswith(f"{problem_num}_") or basename.startswith(f"{int(problem_num):03d}_") or basename.startswith(f"{int(problem_num):04d}_"):
-            target_file = f
-            target_dir = os.path.dirname(f)
-            break
             
-    if not target_file:
+    if not matches:
         print_error(f"Could not find local file for problem {problem_num}.")
         print_info("Try running 'leet add' or 'leet daily' first.")
         return
-        
+
+    if len(matches) == 1:
+        target_file = matches[0]
+    else:
+        choices = [os.path.basename(path) for path in matches]
+        selected = styled_select("Multiple matches found. Select file to open", choices)
+        target_file = matches[choices.index(selected)]
+
+    target_dir = os.path.dirname(target_file)
+
     print_success(f"Found problem: {os.path.basename(target_file)}")
     
     # Print the description if README.md exists
@@ -55,7 +71,6 @@ def main(config: Dict[str, Any]):
     else:
         print_warning("No README.md found for this problem.")
         
-    config_manager = ConfigManager()
     editor = config_manager.get_editor()
     
     # Check for split layout support
