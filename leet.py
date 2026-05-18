@@ -14,6 +14,7 @@ from cli.commands import run_problem
 from cli.commands import search_problems
 from cli.commands import stats
 from cli.commands import theme
+from cli.commands import profile
 from cli.utils.config_manager import ConfigManager
 from cli.utils.ui import (
     print_banner, print_small_banner, print_info, print_error, 
@@ -38,6 +39,7 @@ COMMANDS = [
     ("hint", "Get hints for a specific problem"),
     ("open", "Open problem description and code editor"),
     ("run", "Compile or run code locally"),
+    ("profile", "View LeetCode user profile stats"),
     ("exit", "Exit the CLI"),
     ("quit", "Exit the CLI"),
     ("/help", "Show this help message"),
@@ -114,6 +116,10 @@ def handle_command(config, cmd_string):
         print()
         sys.argv = parts
         run_problem.main(config)
+    elif cmd == "profile":
+        print()
+        sys.argv = parts
+        profile.main(config)
     elif cmd in ["help", "/help"]:
         show_help()
     else:
