@@ -71,6 +71,11 @@ class TestMainFunction:
                 main()
                 mock_list_main.assert_called_once()
 
+    def test_main_recognizes_profile_command(self):
+        with patch.object(sys, 'argv', ['leet', 'profile', 'tourist']):
+            with patch('cli.commands.profile.main') as mock_profile_main:
+                main()
+                mock_profile_main.assert_called_once()
 
 class TestConfigValid:
     

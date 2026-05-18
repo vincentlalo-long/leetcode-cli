@@ -114,3 +114,41 @@ def get_all_problems() -> Optional[Dict[str, Any]]:
         return response.json()
     except requests.exceptions.RequestException:
         return None
+
+def get_user_profile(username: str) -> Optional[Dict[str, Any]]:
+    """Fetch user profile stats from LeetCode GraphQL API."""
+    url = "https://leetcode.com/graphql"
+    query = """
+    query getUserProfile($username: String!) {
+      matchedUser(username: $username) {
+        username
+        submitStats: submitStatsGlobal {
+          acSubmissionNum {
+            difficulty
+            count
+          }
+        }
+        profile {
+          ranking
+          reputation
+          starRating
+        }
+      }
+    }
+    """
+    variables = {"username": username}
+    headers = {
+        "Content-Type": "application/json",
+        "Referer": "https://leetcode.com"
+    }
+    payload = {"query": query, "variables": variables}
+    
+    try:
+        response = requests.post(url, json=payload, headers=headers, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+        if "errors" in data or not data.get("data", {}).get("matchedUser"):
+            return None
+        return data["data"]["matchedUser"]
+    except requests.exceptions.RequestException:
+        return None
