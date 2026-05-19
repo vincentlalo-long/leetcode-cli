@@ -152,3 +152,32 @@ def get_user_profile(username: str) -> Optional[Dict[str, Any]]:
         return data["data"]["matchedUser"]
     except requests.exceptions.RequestException:
         return None
+
+def get_upcoming_contests() -> Optional[list]:
+    """Fetch upcoming contests from LeetCode GraphQL API."""
+    url = "https://leetcode.com/graphql"
+    query = """
+    query {
+      topTwoContests {
+        title
+        titleSlug
+        startTime
+        duration
+      }
+    }
+    """
+    headers = {
+        "Content-Type": "application/json",
+        "Referer": "https://leetcode.com"
+    }
+    payload = {"query": query}
+    
+    try:
+        response = requests.post(url, json=payload, headers=headers, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+        if "errors" in data or not data.get("data", {}).get("topTwoContests"):
+            return None
+        return data["data"]["topTwoContests"]
+    except requests.exceptions.RequestException:
+        return None
