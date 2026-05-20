@@ -16,6 +16,7 @@ from cli.commands import stats
 from cli.commands import theme
 from cli.commands import profile
 from cli.commands import contest
+from cli.commands import similar
 from cli.utils.config_manager import ConfigManager
 from cli.utils.ui import (
     print_banner, print_small_banner, print_info, print_error, 
@@ -38,6 +39,7 @@ COMMANDS = [
     ("daily", "Get and add LeetCode daily challenge"),
     ("random", "Get a random LeetCode problem"),
     ("hint", "Get hints for a specific problem"),
+    ("similar", "Find similar problems"),
     ("open", "Open problem description and code editor"),
     ("run", "Compile or run code locally"),
     ("profile", "View LeetCode user profile stats"),
@@ -110,6 +112,10 @@ def handle_command(config, cmd_string):
         print()
         sys.argv = parts
         hint.main(config)
+    elif cmd == "similar":
+        print()
+        sys.argv = parts
+        similar.main(config)
     elif cmd == "open":
         print()
         sys.argv = parts

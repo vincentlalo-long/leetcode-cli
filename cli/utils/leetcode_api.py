@@ -14,6 +14,7 @@ def get_problem_details(title_slug: str) -> Optional[Dict[str, Any]]:
         difficulty
         content
         hints
+        similarQuestions
         topicTags {
           name
         }
