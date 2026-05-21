@@ -13,6 +13,7 @@ from cli.commands import random_problem
 from cli.commands import run_problem
 from cli.commands import search_problems
 from cli.commands import stats
+from cli.commands import sync
 from cli.commands import theme
 from cli.commands import profile
 from cli.commands import contest
@@ -42,6 +43,7 @@ COMMANDS = [
     ("similar", "Find similar problems"),
     ("open", "Open problem description and code editor"),
     ("run", "Compile or run code locally"),
+    ("sync", "Sync LeetCode workspace with Git"),
     ("profile", "View LeetCode user profile stats"),
     ("contest", "View upcoming LeetCode contests"),
     ("exit", "Exit the CLI"),
@@ -124,6 +126,10 @@ def handle_command(config, cmd_string):
         print()
         sys.argv = parts
         run_problem.main(config)
+    elif cmd == "sync":
+        print()
+        sys.argv = parts
+        sync.main(config)
     elif cmd == "profile":
         print()
         sys.argv = parts
